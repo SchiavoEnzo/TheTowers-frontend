@@ -3,7 +3,7 @@
     "name": "Vigia",
     "player-name": "Jogador de exemplo",
     "age": "28",
-    "formation": "Investigação"
+    "formation": "Investiga\u00e7\u00e3o"
   },
   "atributes": {
     "level": 1,
@@ -54,7 +54,8 @@
       "surviving": 0,
       "tatics": 0,
       "technology": 0,
-      "force": 0
+      "force": 0,
+      "investigation": 0
     },
     "atained-objects": [],
     "money": [],

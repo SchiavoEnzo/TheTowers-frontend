@@ -40,3 +40,13 @@ O servidor local de produção usa a porta 3001. Para outra porta, execute `npx 
 Publique este repositório como um projeto Next.js separado. Alterar `BACKEND_URL` requer novo build/deploy. O encaminhamento exige um servidor Next.js; exportação estática não é suportada por esta configuração.
 
 Após iniciar os dois projetos, valide cadastro/login, edição de perfil, criação de agente/campanha e rolagem na mesa. Recarregue uma URL interna para conferir o acesso direto às telas.
+
+## Dossiê de personagem
+
+Agentes e ameaças exibem atributos, recursos, defesa e perícias em uma ficha responsiva. O proprietário pode personalizar a identificação, os valores e os bônus, ajustar vida e determinação e cadastrar ataques, habilidades, rituais e itens. Fichas compartilhadas são somente leitura.
+
+Os dados adicionais são salvos em `habilities.extras.dossier`, pela rota PUT já existente. Os valores de treino e outros bônus são somados em `habilities.lasts` para manter a mesa compatível. Os campos anteriores são preservados; Vigor é um novo campo independente de `main.willing`. Os máximos iniciais de vida e determinação vêm de `atributes.pv` e `atributes.dp`.
+
+Os testes do dossiê usam `1d20 + bônus`, como a mesa atual; o atributo da perícia é informativo. Ataques permitem bônus e expressões de dano, como `2d6+3`. Rolagens do dossiê são locais e não entram no histórico da campanha.
+
+Execute `npm test` para verificar compatibilidade de fichas, recursos e expressões de dados.

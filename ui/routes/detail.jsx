@@ -1,9 +1,15 @@
 import React from "react";
+import CharacterDossier from "../components/CharacterDossier";
 import { Link, useLoaderData, useParams } from "react-router";
 import { api, catalogs, checkKind, recordName } from "../api";
-export function loader({ params }) {
+export async function loader({ params }) {
   checkKind(params.kind);
-  return api(params.kind + "/" + encodeURIComponent(params.id));
+  const record = await api(params.kind + "/" + encodeURIComponent(params.id));
+  if (["agents", "threats"].includes(params.kind)) {
+    const profile = await api("profile");
+    return { ...record, canEdit: record.owner === profile._id };
+  }
+  return record;
 }
 const labels = {
   caractheristics: "Identificação",
@@ -50,8 +56,11 @@ function Values({ value }) {
   return String(value ?? "—");
 }
 export default function Detail() {
-  const { kind } = useParams(),
-    { data, _id: recordId } = useLoaderData();
+  const { kind } = useParams(), record = useLoaderData();
+  const { data, _id: recordId } = record;
+  if (["agents", "threats"].includes(kind)) {
+    return <CharacterDossier key={kind + ":" + recordId} record={record} kind={kind} canEdit={record.canEdit} />;
+  }
   return (
     <>
       <Link to={"/arquivo/" + kind}>← {catalogs[kind]}</Link>
