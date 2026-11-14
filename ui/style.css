@@ -1,0 +1,147 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  color: #f8f4f4;
+  background: #100e10;
+  --line: #49363a;
+  --accent: #ffa0a7;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at top right, #36141c, transparent 55%);
+}
+header,
+main {
+  padding: 1.4rem max(6vw, calc((100vw - 1050px) / 2));
+}
+header {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #100d10;
+}
+header a {
+  font-weight: 900;
+  color: white;
+  text-decoration: none;
+}
+header span,
+small {
+  font: 700 0.75rem monospace;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+main {
+  padding-top: clamp(2rem, 7vw, 5rem);
+  padding-bottom: 5rem;
+}
+h1 {
+  font:
+    normal clamp(2.7rem, 7vw, 5rem)/1 Georgia,
+    serif;
+  margin: 0.4em 0;
+  overflow-wrap: anywhere;
+}
+a {
+  color: var(--accent);
+}
+p {
+  color: #d7c9cc;
+  line-height: 1.6;
+}
+nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+nav a,
+form,
+section section {
+  border: 1px solid var(--line);
+  background: #1b1619;
+  padding: 1.3rem;
+}
+nav a {
+  text-decoration: none;
+  border-top: 3px solid #b6394b;
+}
+nav h2 {
+  color: white;
+}
+form {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 32rem;
+}
+label {
+  display: grid;
+  gap: 0.35rem;
+}
+input,
+button {
+  font: inherit;
+  border-radius: 0.25rem;
+  padding: 0.7rem;
+}
+input {
+  background: #100d10;
+  border: 1px solid #786167;
+  color: white;
+  width: 100%;
+}
+button {
+  background: #aa2139;
+  border: 1px solid #ca435b;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+.secondary {
+  background: #30282b;
+}
+button:disabled {
+  opacity: 0.6;
+}
+fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  border: 1px solid var(--line);
+}
+footer {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+footer form {
+  border: 0;
+  padding: 0;
+}
+dt {
+  color: var(--accent);
+  font-weight: bold;
+}
+dd {
+  margin: 0.3rem 0 1rem 1rem;
+  overflow-wrap: anywhere;
+}
+:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+}
+select {
+  background: #100d10;
+  color: white;
+  border: 1px solid #786167;
+  padding: 0.7rem;
+  font: inherit;
+}
+input[type="checkbox"] {
+  width: auto;
+}

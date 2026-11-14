@@ -1,0 +1,64 @@
+{
+  "caractheristics": {
+    "name": "Vigia",
+    "player-name": "Jogador de exemplo",
+    "age": "28",
+    "formation": "Investigação"
+  },
+  "atributes": {
+    "level": 1,
+    "dp": 1,
+    "sanity": 1,
+    "pv": 1,
+    "shield": 1,
+    "ammo": 1
+  },
+  "habilities": {
+    "naturals": {
+      "inteligence": 1,
+      "wisdom": 1,
+      "existance": 1
+    },
+    "main": {
+      "intelect": 2,
+      "strengh": 2,
+      "agility": 2,
+      "charisma": 2,
+      "willing": 2
+    },
+    "lasts": {
+      "acrobacy": 0,
+      "art": 0,
+      "currents": 0,
+      "training": 0,
+      "atlethics": 0,
+      "science": 0,
+      "crime": 0,
+      "diplomacy": 0,
+      "decieving": 0,
+      "fortitude": 0,
+      "furtivity": 0,
+      "initiative": 0,
+      "intimidating": 0,
+      "intuition": 0,
+      "fight": 0,
+      "medicine": 0,
+      "ocultism": 0,
+      "misticism": 0,
+      "perception": 0,
+      "piloting": 0,
+      "profession": 0,
+      "acuracy": 0,
+      "reflex": 0,
+      "religion": 0,
+      "surviving": 0,
+      "tatics": 0,
+      "technology": 0,
+      "force": 0
+    },
+    "atained-objects": [],
+    "money": [],
+    "extras": {}
+  },
+  "class": "Investigador"
+}
