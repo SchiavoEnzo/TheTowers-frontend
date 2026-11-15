@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
 import { api } from '../api';
-import { attributes, skills, tabs, readDossier, withDossier, rollDice } from './character.js';
+import { attributes, naturals, resources, skills, tabs, readDossier, withDossier, rollDice } from './character.js';
 
 function Field({ label, value, onChange, type = 'text', min, max, required = false }) {
   return <label className="dossier-field"><span>{label}</span><input type={type} value={value ?? ''}
@@ -12,11 +12,11 @@ function Field({ label, value, onChange, type = 'text', min, max, required = fal
 function Resource({ label, value, max, color, onChange, disabled }) {
   return <div className={'dossier-resource ' + color}>
     <span>{label}</span>
-    <div className="resource-controls" style={{ '--fill': `${max > 0 ? value / max * 100 : 0}%` }}>
+    <div className="resource-controls" style={{ '--fill': `${max > 0 ? Math.max(0, Math.min(100, value / max * 100)) : 0}%` }}>
       <button type="button" aria-label={`Zerar ${label}`} disabled={disabled || value === 0} onClick={() => onChange(0)}>«</button>
-      <button type="button" aria-label={`Diminuir ${label}`} disabled={disabled || value === 0} onClick={() => onChange(value - 1)}>−</button>
+      <button type="button" aria-label={`Diminuir ${label}`} disabled={disabled} onClick={() => onChange(value - 1)}>−</button>
       <strong>{value} <span>/ {max}</span></strong>
-      <button type="button" aria-label={`Aumentar ${label}`} disabled={disabled || value === max} onClick={() => onChange(value + 1)}>+</button>
+      <button type="button" aria-label={`Aumentar ${label}`} disabled={disabled || value >= max} onClick={() => onChange(value + 1)}>+</button>
       <button type="button" aria-label={`Restaurar ${label}`} disabled={disabled || value === max} onClick={() => onChange(max)}>»</button>
     </div>
   </div>;
@@ -32,11 +32,17 @@ function Editor({ data, kind, onSave, onCancel, busy }) {
   return <form className="dossier-editor" onSubmit={(event) => {
     event.preventDefault();
     const next = withDossier(draft, sheet);
-    for (const key of ['origin', 'personality', 'history']) {
+    for (const key of ['origin', 'personality', 'history', 'wishes']) {
       if (!next.caractheristics[key]?.trim()) delete next.caractheristics[key];
     }
     if (!next.class?.trim()) delete next.class;
-    if (!next.species?.trim()) delete next.species;
+    for (const key of ['species', 'rank', 'element', 'size']) {
+      if (!next[key]?.trim()) delete next[key];
+    }
+    for (const key of ['pary', 'dodge']) {
+      if (next.atributes[key] === '') delete next.atributes[key];
+    }
+    if (next.vd === '') delete next.vd;
     onSave(next);
   }}>
     <div className="dossier-section-heading"><h2>Personalizar dossiê</h2><button type="button" className="secondary" disabled={busy} onClick={onCancel}>Cancelar</button></div>
@@ -44,24 +50,36 @@ function Editor({ data, kind, onSave, onCancel, busy }) {
       <legend>Identificação</legend>
       {Object.entries({ name: 'Personagem', 'player-name': 'Jogador', age: 'Idade', formation: 'Formação', origin: 'Origem' }).map(([key, label]) =>
         <Field key={key} label={label} value={draft.caractheristics[key]} required={key !== 'origin'} onChange={(value) => field('caractheristics', key, value)} />)}
-      <Field label={kind === 'threats' ? 'Espécie' : 'Classe'} value={kind === 'threats' ? draft.species : draft.class} onChange={(value) => setDraft((previous) => ({ ...previous, [kind === 'threats' ? 'species' : 'class']: value }))} />
+      {(kind === 'threats'
+        ? [['species', 'Espécie'], ['element', 'Elemento'], ['size', 'Tamanho']]
+        : [['class', 'Classe'], ['rank', 'Patente']]).map(([key, label]) =>
+        <Field key={key} label={label} value={draft[key]} onChange={(value) => setDraft((previous) => ({ ...previous, [key]: value }))} />)}
+      {kind === 'threats' && <Field label="VD" type="number" min={0} value={draft.vd} onChange={(value) => setDraft((previous) => ({ ...previous, vd: value }))} />}
+    </fieldset>
+    {[['main', 'Habilidades principais', attributes], ['naturals', 'Habilidades naturais', naturals]].map(([group, label, entries]) =>
+      <fieldset key={group} disabled={busy}>
+        <legend>{label}</legend>
+        {entries.map(([key, name]) => <Field key={key} label={name} type="number" required
+          value={draft.habilities[group][key]}
+          onChange={(value) => setDraft((previous) => ({ ...previous,
+            habilities: { ...previous.habilities, [group]: { ...previous.habilities[group], [key]: value } } }))} />)}
+      </fieldset>)}
+    <fieldset disabled={busy}>
+      <legend>Atributos atuais e máximos</legend>
+      <Field label="Nível" type="number" required value={draft.atributes.level} onChange={(value) => field('atributes', 'level', value)} />
+      {resources.map(([key, label]) => <div className="resource-editor-row" key={key}><strong>{label}</strong>
+        {[['current', 'Atual'], ['maximum', 'Máximo']].map(([part, name]) =>
+          <Field key={part} label={label + ' · ' + name} type="number" required value={sheet.resources[key][part]}
+            onChange={(value) => setSheet((previous) => ({ ...previous, resources: { ...previous.resources,
+              [key]: { ...previous.resources[key], [part]: value } } }))} />)}
+      </div>)}
+      {[['pary', 'Bloqueio'], ['dodge', 'Esquiva']].map(([key, label]) =>
+        <Field key={key} label={label} type="number" value={draft.atributes[key]} onChange={(value) => field('atributes', key, value)} />)}
     </fieldset>
     <fieldset disabled={busy}>
-      <legend>Atributos</legend>
-      {attributes.map(([key, label]) => <Field key={key} label={label} type="number" required
-        value={key === 'vigor' ? sheet.vigor : draft.habilities.main[key]}
-        onChange={(value) => key === 'vigor' ? set(key, value) : setDraft((previous) => ({ ...previous,
-          habilities: { ...previous.habilities, main: { ...previous.habilities.main, [key]: value } } }))} />)}
-      <p className="dossier-hint">Vigor é um campo novo. Os atributos anteriores, incluindo Vontade, continuam preservados.</p>
-    </fieldset>
-    <fieldset disabled={busy}>
-      <legend>Recursos e defesa</legend>
-      {Object.entries({ level: 'Nível', sanity: 'Sanidade', shield: 'Defesa', pary: 'Bloqueio', dodge: 'Esquiva', ammo: 'Munição' }).map(([key, label]) =>
-        <Field key={key} label={label} type="number" required value={draft.atributes[key] ?? 0} onChange={(value) => field('atributes', key, value)} />)}
-      {Object.entries({ nex: 'NEX (%)', perTurn: 'PD por turno', maxLife: 'Vida máxima', life: 'Vida atual',
-        maxDetermination: 'Determinação máxima', determination: 'Determinação atual' }).map(([key, label]) =>
-        <Field key={key} label={label} type="number" min={0} max={key === 'nex' ? 100 : key === 'life' ? sheet.maxLife : key === 'determination' ? sheet.maxDetermination : undefined}
-          required value={sheet[key]} onChange={(value) => set(key, value)} />)}
+      <legend>Informações complementares</legend>
+      <Field label="NEX (%)" type="number" min={0} max={100} required value={sheet.nex} onChange={(value) => set('nex', value)} />
+      <Field label="PD por turno" type="number" required value={sheet.perTurn} onChange={(value) => set('perTurn', value)} />
       {Object.entries({ movement: 'Deslocamento', protection: 'Proteção', resistances: 'Resistências', proficiencies: 'Proficiências' }).map(([key, label]) =>
         <Field key={key} label={label} value={sheet[key]} onChange={(value) => set(key, value)} />)}
     </fieldset>
@@ -75,8 +93,8 @@ function Editor({ data, kind, onSave, onCancel, busy }) {
     </fieldset>
     <fieldset disabled={busy}>
       <legend>Descrição</legend>
-      {Object.entries({ personality: 'Personalidade', history: 'História' }).map(([key, label]) =>
-        <label key={key}>{label}<textarea maxLength={8192} rows={5} value={draft.caractheristics[key] || ''} onChange={(event) => field('caractheristics', key, event.target.value)} /></label>)}
+      {Object.entries({ wishes: 'Desejos', personality: 'Personalidade', history: 'História' }).map(([key, label]) =>
+        <label key={key}>{label}<textarea aria-label={label} maxLength={8192} rows={5} value={draft.caractheristics[key] || ''} onChange={(event) => field('caractheristics', key, event.target.value)} /></label>)}
     </fieldset>
     <button disabled={busy}>{busy ? 'Salvando…' : 'Salvar dossiê'}</button>
   </form>;
@@ -132,38 +150,48 @@ export default function CharacterDossier({ record, kind, canEdit }) {
         {canEdit && <button type="button" disabled={busy || editing} onClick={() => { setEditing(true); setAdding(false); setNotice(''); }}>Personalização</button>}</div></div>
     <div className="dossier-identity"><div className="dossier-avatar" aria-hidden="true">{identity.name.slice(0, 1)}</div>
       <div><small>Personagem</small><h1>{identity.name}</h1></div>
-      <dl>{[['Jogador', identity['player-name']], ['Origem', identity.origin], [kind === 'threats' ? 'Espécie' : 'Classe', data.class || data.species]].map(([label, value]) =>
-        <div key={label}><dt>{label}</dt><dd>{value || 'Não informado'}</dd></div>)}</dl></div>
+      <dl>{[['Jogador', identity['player-name']], ['Origem', identity.origin], ['Idade', identity.age], ['Formação', identity.formation],
+        ...(kind === 'threats' ? [['Espécie', data.species], ['Elemento', data.element], ['VD', data.vd], ['Tamanho', data.size]]
+          : [['Classe', data.class], ['Patente', data.rank]])].map(([label, value]) =>
+        <div key={label}><dt>{label}</dt><dd>{value == null || value === '' ? 'Não informado' : value}</dd></div>)}</dl></div>
     {error && <p role="alert" className="dossier-message error">{error}</p>}
     <p role="status" className="dossier-message">{notice}</p>
     {!canEdit && <p className="dossier-hint">Ficha compartilhada · somente leitura.</p>}
     {editing ? <Editor data={data} kind={kind} onSave={save} onCancel={() => { setEditing(false); setError(''); }} busy={busy} /> :
       <div className="dossier-layout">
         <aside className="dossier-summary" aria-label="Atributos e recursos">
-          <div className="attribute-orbit"><span className="attribute-center">ATRIBUTOS</span>
-            {attributes.map(([key, label, abbr], index) => <div className={'attribute-node attribute-' + index} key={key} title={label}>
-              <strong>{key === 'vigor' ? sheet.vigor : data.habilities.main[key]}</strong><span>{label}</span><b>{abbr}</b></div>)}
+          <h2 className="sigil-heading">Habilidades do personagem</h2>
+          <div className="attribute-orbit" role="group" aria-label="Cinco habilidades principais e três naturais">
+            <img className="attribute-sigil" src="/images/character-circle.png" alt="" width="1254" height="1254" />
+            {[[attributes, 'main', 'Principal'], [naturals, 'naturals', 'Natural']].flatMap(([entries, group, category]) =>
+              entries.map(([key, label, abbr], index) => <button type="button" className={`sigil-node sigil-${group}-${index}`}
+                key={key} title={`${label} · ${category}`} aria-label={`${label} (${category}): ${data.habilities[group][key]}. Rolar 1d20 com bônus ${data.habilities[group][key]}`}
+                onClick={() => roll(label, '1d20', data.habilities[group][key])}>
+                <strong>{data.habilities[group][key]}</strong><span>{label}</span><b>{abbr}</b>
+              </button>))}
           </div>
+          <p className="sigil-caption"><span>Externas · Principais</span><span>Internas · Naturais</span></p>
           <div className="dossier-metrics">{[['Nível', data.atributes.level], ['NEX', sheet.nex + '%'], ['PD / turno', sheet.perTurn], ['Deslocamento', sheet.movement || '—']].map(([label, value]) =>
             <div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
-          <Resource label="Vida" value={sheet.life} max={sheet.maxLife} color="life" disabled={!canEdit || busy}
-            onChange={(value) => saveSheet({ ...sheet, life: value })} />
-          <Resource label="Determinação" value={sheet.determination} max={sheet.maxDetermination} color="determination" disabled={!canEdit || busy}
-            onChange={(value) => saveSheet({ ...sheet, determination: value })} />
-          <div className="dossier-defenses">{[['Defesa', data.atributes.shield], ['Bloqueio', data.atributes.pary], ['Esquiva', data.atributes.dodge]].map(([label, value]) =>
+          <div className="dossier-resource-list" aria-label="Recursos atuais e máximos">
+            {resources.map(([key, label, color]) => <Resource key={key} label={label} value={sheet.resources[key].current}
+              max={sheet.resources[key].maximum} color={color} disabled={!canEdit || busy}
+              onChange={(value) => saveSheet({ ...sheet, resources: { ...sheet.resources, [key]: { ...sheet.resources[key], current: value } } })} />)}
+          </div>
+          <div className="dossier-defenses">{[['Bloqueio', data.atributes.pary], ['Esquiva', data.atributes.dodge]].map(([label, value]) =>
             <div key={label}><strong>{value ?? '—'}</strong><span>{label}</span></div>)}</div>
-          <dl className="dossier-notes">{[['Proteção', sheet.protection], ['Resistências', sheet.resistances], ['Proficiências', sheet.proficiencies], ['Sanidade', data.atributes.sanity], ['Munição', data.atributes.ammo]].map(([label, value]) =>
+          <dl className="dossier-notes">{[['Proteção', sheet.protection], ['Resistências', sheet.resistances], ['Proficiências', sheet.proficiencies]].map(([label, value]) =>
             <div key={label}><dt>{label}</dt><dd>{value === '' || value == null ? '—' : value}</dd></div>)}</dl>
         </aside>
         <section className="dossier-skills" aria-labelledby="skills-title"><h2 id="skills-title">Perícias</h2>
-          <table><thead><tr><th scope="col">Perícia</th><th scope="col">Atrib.</th><th scope="col">Bônus</th><th scope="col">Treino</th><th scope="col">Outros</th></tr></thead>
-            <tbody>{skills.map(([key, label, attr]) => {
+          <table><thead><tr><th scope="col">Perícia</th><th scope="col">Bônus</th><th scope="col">Treino</th><th scope="col">Outros</th></tr></thead>
+            <tbody>{skills.map(([key, label]) => {
               const { training, other } = sheet.skills[key];
               return <tr key={key} className={training >= 15 ? 'skill-expert' : training >= 10 ? 'skill-trained' : ''}>
                 <th scope="row"><button type="button" onClick={() => roll(label, '1d20', training + other)} aria-label={`Rolar ${label}: 1d20 com bônus ${training + other}`}><span aria-hidden="true">◇</span> {label}</button></th>
-                <td>{attr}</td><td>{training + other}</td><td>{training}</td><td>{other}</td></tr>;
+                <td>{training + other}</td><td>{training}</td><td>{other}</td></tr>;
             })}</tbody></table>
-          <p className="dossier-hint">Clique em uma perícia para rolar 1d20 + bônus. A coluna de atributo é uma referência e não soma ao resultado.</p>
+          <p className="dossier-hint">Clique em uma perícia para rolar 1d20 + bônus. Os bônus seguem os valores registrados na ficha.</p>
         </section>
         <section className="dossier-content" aria-label="Detalhes do personagem">
           <div className="dossier-tabs" role="tablist" aria-label="Seções do dossiê">{tabs.map(([key, label]) =>
@@ -186,9 +214,7 @@ export default function CharacterDossier({ record, kind, canEdit }) {
           <p className="dossier-hint">Rolagens locais, sem registro na campanha. Use a mesa para registrar testes.</p>
           <div role="tabpanel" id="dossier-tab-panel" aria-labelledby={'tab-' + tab}>
             {tab === 'description' ? <div className="dossier-description">
-              {Object.entries({ age: 'Idade', formation: 'Formação', personality: 'Personalidade', history: 'História' }).map(([key, label]) => <div key={key}><h3>{label}</h3><p>{identity[key] || 'Ainda não informado.'}</p></div>)}
-              <h3>Outros atributos da ficha</h3><dl>{Object.entries({ ...data.habilities.naturals, willing: data.habilities.main.willing }).map(([key, value]) =>
-                <div key={key}><dt>{{ inteligence: 'Inteligência natural', wisdom: 'Sabedoria', existance: 'Existência', willing: 'Vontade (atributo anterior)' }[key] || key}</dt><dd>{value}</dd></div>)}</dl>
+              {Object.entries({ age: 'Idade', formation: 'Formação', wishes: 'Desejos', personality: 'Personalidade', history: 'História' }).map(([key, label]) => <div key={key}><h3>{label}</h3><p>{identity[key] || 'Ainda não informado.'}</p></div>)}
             </div> : <>
               <div className="dossier-section-heading"><h2>{tabs.find(([key]) => key === tab)[1]}</h2>{canEdit && !adding && <button type="button" disabled={busy} onClick={() => setAdding(true)}>
                 + {{ attacks: 'Novo ataque', abilities: 'Nova habilidade', rituals: 'Novo ritual', inventory: 'Novo item' }[tab]}</button>}</div>
@@ -201,7 +227,10 @@ export default function CharacterDossier({ record, kind, canEdit }) {
                   {canEdit && <button type="button" className="secondary" disabled={busy} onClick={() => {
                     if (window.confirm(`Remover “${entry.name}” do dossiê?`)) saveSheet({ ...sheet, [tab]: sheet[tab].filter((_, position) => position !== index) });
                   }}>Remover</button>}</div></div>)}</div>
-              {tab === 'inventory' && data.habilities['atained-objects']?.length > 0 && <div className="dossier-linked"><h3>Objetos vinculados</h3><ul>{data.habilities['atained-objects'].map((id) => <li key={id}><code>{id}</code></li>)}</ul></div>}
+              {tab === 'inventory' && [['atained-objects', 'Objetos vinculados'], ['money', 'Dinheiro vinculado']].map(([key, label]) =>
+                <div className="dossier-linked" key={key}><h3>{label} · {data.habilities[key]?.length || 0}</h3>
+                  {!data.habilities[key]?.length ? <p>Nenhum registro vinculado.</p> : <ul>{data.habilities[key].map((id) => <li key={id}><code>{id}</code></li>)}</ul>}
+                </div>)}
             </>}
           </div>
         </section>

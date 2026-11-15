@@ -1,24 +1,35 @@
 export const attributes = [
   ['agility', 'Agilidade', 'AGI'], ['strengh', 'Força', 'FOR'],
-  ['intelect', 'Intelecto', 'INT'], ['charisma', 'Presença', 'PRE'],
-  ['vigor', 'Vigor', 'VIG'],
+  ['intelect', 'Intelecto', 'INT'], ['charisma', 'Carisma', 'CAR'],
+  ['willing', 'Vontade', 'VON'],
+];
+
+export const naturals = [
+  ['inteligence', 'Inteligência', 'INL'], ['wisdom', 'Sabedoria', 'SAB'],
+  ['existance', 'Existência', 'EXI'],
+];
+
+export const resources = [
+  ['pv', 'Vida', 'life'], ['dp', 'Determinação', 'determination'],
+  ['shield', 'Armadura', 'armor'], ['defense', 'Defesa', 'defense'],
+  ['sanity', 'Sanidade', 'sanity'], ['ammo', 'Munição', 'ammo'],
 ];
 
 export const skills = [
-  ['acrobacy', 'Acrobacia', 'AGI'], ['training', 'Adestramento', 'PRE'],
-  ['art', 'Artes', 'PRE'], ['atlethics', 'Atletismo', 'FOR'],
-  ['currents', 'Atualidades', 'INT'], ['science', 'Ciências', 'INT'],
-  ['crime', 'Crime', 'AGI'], ['diplomacy', 'Diplomacia', 'PRE'],
-  ['decieving', 'Enganação', 'PRE'], ['fortitude', 'Fortitude', 'VIG'],
-  ['furtivity', 'Furtividade', 'AGI'], ['initiative', 'Iniciativa', 'AGI'],
-  ['intimidating', 'Intimidação', 'PRE'], ['intuition', 'Intuição', 'PRE'],
-  ['investigation', 'Investigação', 'INT'], ['fight', 'Luta', 'FOR'], ['medicine', 'Medicina', 'INT'],
-  ['ocultism', 'Ocultismo', 'INT'], ['misticism', 'Misticismo', 'INT'],
-  ['perception', 'Percepção', 'PRE'], ['piloting', 'Pilotagem', 'AGI'],
-  ['acuracy', 'Pontaria', 'AGI'], ['profession', 'Profissão', 'INT'],
-  ['reflex', 'Reflexos', 'AGI'], ['religion', 'Religião', 'PRE'],
-  ['surviving', 'Sobrevivência', 'INT'], ['tatics', 'Tática', 'INT'],
-  ['technology', 'Tecnologia', 'INT'], ['force', 'Vontade', 'PRE'],
+  ['acrobacy', 'Acrobacia'], ['training', 'Adestramento'],
+  ['art', 'Artes'], ['atlethics', 'Atletismo'],
+  ['currents', 'Atualidades'], ['science', 'Ciências'],
+  ['crime', 'Crime'], ['diplomacy', 'Diplomacia'],
+  ['decieving', 'Enganação'], ['fortitude', 'Fortitude'],
+  ['furtivity', 'Furtividade'], ['initiative', 'Iniciativa'],
+  ['intimidating', 'Intimidação'], ['intuition', 'Intuição'],
+  ['investigation', 'Investigação'], ['fight', 'Luta'], ['medicine', 'Medicina'],
+  ['ocultism', 'Ocultismo'], ['misticism', 'Misticismo'],
+  ['perception', 'Percepção'], ['piloting', 'Pilotagem'],
+  ['acuracy', 'Pontaria'], ['profession', 'Profissão'],
+  ['reflex', 'Reflexos'], ['religion', 'Religião'],
+  ['surviving', 'Sobrevivência'], ['tatics', 'Tática'],
+  ['technology', 'Tecnologia'], ['force', 'Vontade'],
 ];
 
 export const tabs = [
@@ -30,26 +41,37 @@ const number = (value, fallback = 0) => typeof value === 'number' && Number.isFi
 const string = (value) => typeof value === 'string' ? value : '';
 const object = (value) => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 
-// New sheet fields live in extras; legacy fields and unknown extras remain intact.
+// The model owns resource values. Legacy extras are migrated only when native
+// current-* fields are absent; explicit zeroes and out-of-range values survive.
+export function readResources(data) {
+  const saved = object(data.habilities?.extras?.dossier);
+  const legacy = { pv: ['maxLife', 'life'], dp: ['maxDetermination', 'determination'] };
+  return Object.fromEntries(resources.map(([key]) => {
+    const nativeCurrent = data.atributes[`current-${key}`];
+    const hasNativeCurrent = typeof nativeCurrent === 'number' && Number.isFinite(nativeCurrent);
+    const [maxKey, currentKey] = legacy[key] || [];
+    const maximum = !hasNativeCurrent && maxKey
+      ? number(saved[maxKey], number(data.atributes[key])) : number(data.atributes[key]);
+    const current = hasNativeCurrent ? nativeCurrent : currentKey ? number(saved[currentKey], maximum) : maximum;
+    return [key, { maximum, current }];
+  }));
+}
+
 export function readDossier(data) {
   const saved = object(data.habilities?.extras?.dossier);
-  const maxLife = Math.max(0, number(saved.maxLife, data.atributes.pv));
-  const maxDetermination = Math.max(0, number(saved.maxDetermination, data.atributes.dp));
   const sheet = {
     ...saved,
-    vigor: number(saved.vigor), nex: number(saved.nex), perTurn: number(saved.perTurn),
+    nex: number(saved.nex), perTurn: number(saved.perTurn),
     movement: string(saved.movement), protection: string(saved.protection),
     resistances: string(saved.resistances), proficiencies: string(saved.proficiencies),
-    maxLife, maxDetermination,
-    life: Math.max(0, Math.min(maxLife, number(saved.life, data.atributes.pv))),
-    determination: Math.max(0, Math.min(maxDetermination, number(saved.determination, data.atributes.dp))),
-    skills: { ...object(saved.skills) },
+    resources: readResources(data), skills: { ...object(saved.skills) },
   };
+  for (const key of ['maxLife', 'life', 'maxDetermination', 'determination']) delete sheet[key];
   for (const [key] of skills) {
     const savedSkill = object(object(saved.skills)[key]);
-    const training = number(savedSkill.training, data.habilities.lasts[key]);
-    const other = number(savedSkill.other);
-    sheet.skills[key] = { training, other };
+    const total = number(data.habilities.lasts[key]);
+    const training = number(savedSkill.training, total);
+    sheet.skills[key] = { training, other: total - training };
   }
   for (const key of ['attacks', 'abilities', 'rituals', 'inventory']) {
     sheet[key] = (Array.isArray(saved[key]) ? saved[key] : [])
@@ -62,7 +84,12 @@ export function readDossier(data) {
 
 export function withDossier(data, sheet) {
   const copy = structuredClone(data);
-  copy.habilities.extras = { ...copy.habilities.extras, dossier: structuredClone(sheet) };
+  const { resources: values, ...extraSheet } = structuredClone(sheet);
+  copy.habilities.extras = { ...copy.habilities.extras, dossier: extraSheet };
+  for (const [key] of resources) {
+    copy.atributes[key] = values[key].maximum;
+    copy.atributes[`current-${key}`] = values[key].current;
+  }
   for (const [key] of skills) {
     const { training, other } = sheet.skills[key];
     copy.habilities.lasts[key] = training + other;

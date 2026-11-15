@@ -8,6 +8,8 @@ import {
 } from "react-router";
 import template from "../../examples/agent.json";
 import { api } from "../api";
+import { resources } from "../components/character.js";
+const attributeLabels = Object.fromEntries(resources.flatMap(([key, label]) => [[key, label + " · Máximo"], ["current-" + key, label + " · Atual"]]));
 const fields = {
   name: "Nome do agente",
   "player-name": "Nome do jogador",
@@ -52,16 +54,7 @@ export default function NewAgent() {
           <legend>Recursos iniciais</legend>
           {Object.entries(template.atributes).map(([key, value]) => (
             <label key={key}>
-              {
-                {
-                  level: "Nível",
-                  dp: "DP",
-                  sanity: "Sanidade",
-                  pv: "PV",
-                  shield: "Escudo",
-                  ammo: "Munição",
-                }[key]
-              }
+              {key === "level" ? "Nível" : attributeLabels[key] || key}
               <input type="number" required name={key} defaultValue={value} />
             </label>
           ))}

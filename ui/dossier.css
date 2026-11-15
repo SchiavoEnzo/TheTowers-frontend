@@ -21,17 +21,29 @@ main:has(.character-dossier) { max-width: 1600px; margin: auto; padding: 24px 28
 .dossier-layout { display: grid; grid-template-columns: minmax(245px, 0.92fr) minmax(290px, 1fr) minmax(320px, 1.45fr); gap: 28px; margin-top: 20px; }
 .character-dossier h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 14px; }
 .character-dossier h3 { font-size: 14px; }
-.attribute-orbit { position: relative; height: 290px; max-width: 310px; margin: 0 auto 14px; background: radial-gradient(circle at 50% 49%, transparent 24%, #97929f 24.3%, transparent 25%, transparent 31%, #77717c 31.3%, transparent 32%); }
-.attribute-center { position: absolute; top: 46%; left: 0; right: 0; text-align: center; font: bold 13px Georgia, serif; }
-.attribute-node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #d0cbd6; border-radius: 50%; outline: 3px double #77717c; outline-offset: 4px; width: 74px; height: 74px; background: #111213; }
-.attribute-node strong { font-size: 25px; line-height: 1.1; }
-.attribute-node span { font-size: 8px; text-transform: uppercase; margin-top: 4px; }
-.attribute-node b { font: 16px/1 Georgia, serif; }
-.attribute-0 { top: 4%; left: calc(50% - 37px); }
-.attribute-1 { top: 32%; left: 5%; }
-.attribute-2 { top: 32%; right: 5%; }
-.attribute-3 { bottom: 5%; left: 16%; }
-.attribute-4 { bottom: 5%; right: 16%; }
+ .sigil-heading { text-align: center; }
+.attribute-orbit { position: relative; width: 100%; aspect-ratio: 1; max-width: 440px; margin: 0 auto; container-type: inline-size; }
+.attribute-sigil { display: block; width: 100%; height: auto; pointer-events: none; }
+.character-dossier .sigil-node { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 16.5%; height: 16.5%; transform: translate(-50%, -50%); border: 0; border-radius: 50%; padding: 0;
+  background: radial-gradient(ellipse, #070606 40%, #070606b8 70%, transparent 72%); color: #fff;
+  text-shadow: 0 1px 3px #000; font-weight: 500; }
+.character-dossier .sigil-node:hover { background: #390b0bef; }
+.sigil-node strong { font: 700 7cqw/1 Georgia, serif; max-width: 100%; overflow-wrap: anywhere; }
+.sigil-node span { font-size: 2.5cqw; line-height: 1.2; margin-top: 3px; }
+.sigil-node b { font: 2.7cqw/1.2 Georgia, serif; color: #e5b7b7; }
+.sigil-main-0 { left: 50%; top: 15.5%; }
+.sigil-main-1 { left: 13.5%; top: 42%; }
+.sigil-main-2 { left: 86.5%; top: 42%; }
+.sigil-main-3 { left: 27%; top: 83%; }
+.sigil-main-4 { left: 73%; top: 83%; }
+.character-dossier .sigil-node[class*='sigil-naturals'] { width: 15%; height: 15%; }
+.sigil-node[class*='sigil-naturals'] strong { font-size: 6cqw; }
+.sigil-node[class*='sigil-naturals'] span { font-size: 2.25cqw; }
+.sigil-naturals-0 { left: 50%; top: 40%; }
+.sigil-naturals-1 { left: 38%; top: 61.5%; }
+.sigil-naturals-2 { left: 62%; top: 61.5%; }
+.sigil-caption { display: flex; justify-content: center; gap: 16px; font-size: 10px; color: #bfb1b1; }
 .dossier-metrics { display: grid; grid-template-columns: .7fr .7fr .9fr 1.5fr; gap: 7px; margin: 16px 0 24px; text-align: center; }
 .dossier-metrics strong { display: grid; align-items: center; min-height: 34px; padding: 5px; border: 1px solid #a5a0aa; overflow-wrap: anywhere; }
 .dossier-metrics span, .dossier-defenses span { display: block; text-transform: uppercase; color: #aaa6af; font-size: 9px; margin-top: 6px; }
@@ -44,9 +56,8 @@ main:has(.character-dossier) { max-width: 1600px; margin: auto; padding: 24px 28
 .character-dossier .resource-controls button { border: 0; padding: 4px 7px; font-size: 18px; }
 .resource-controls strong { flex: 1; font-weight: 500; }
 .resource-controls strong span { opacity: .7; }
-.dossier-defenses { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 28px 0; text-align: center; }
+.dossier-defenses { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 28px 0; text-align: center; }
 .dossier-defenses strong { font-size: 24px; border-bottom: 1px solid #aaa; padding: 0 5px 5px; }
-.dossier-defenses div:first-child strong { border: 2px solid #d0cbd6; border-radius: 0 0 40% 40%; display: inline-block; padding: 10px; }
 .dossier-notes > div { margin-bottom: 20px; }
 .dossier-skills h2 { text-align: center; }
 .dossier-skills table { width: 100%; border-collapse: collapse; font-size: 11px; }
@@ -114,3 +125,14 @@ main:has(.character-dossier) { max-width: 1600px; margin: auto; padding: 24px 28
   .dossier-toolbar { font-size: 11px; }
   .character-dossier .dossier-editor { padding: 10px; }
 }
+
+.armor .resource-controls { background: #272319; }
+.armor .resource-controls::before { background: #876a30; }
+.defense .resource-controls { background: #1d2420; }
+.defense .resource-controls::before { background: #35624a; }
+.sanity .resource-controls { background: #211d2b; }
+.sanity .resource-controls::before { background: #674b8b; }
+.ammo .resource-controls { background: #222326; }
+.ammo .resource-controls::before { background: #555e6d; }
+.resource-editor-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.resource-editor-row > strong { grid-column: 1 / -1; color: #c9c1d0; font-size: 12px; font-weight: 500; }

@@ -3,7 +3,7 @@
     "name": "Vigia",
     "player-name": "Jogador de exemplo",
     "age": "28",
-    "formation": "Investiga\u00e7\u00e3o"
+    "formation": "Investigação"
   },
   "atributes": {
     "level": 1,
@@ -11,7 +11,14 @@
     "sanity": 1,
     "pv": 1,
     "shield": 1,
-    "ammo": 1
+    "ammo": 1,
+    "defense": 0,
+    "current-pv": 1,
+    "current-dp": 1,
+    "current-shield": 1,
+    "current-defense": 0,
+    "current-sanity": 1,
+    "current-ammo": 1
   },
   "habilities": {
     "naturals": {
@@ -41,6 +48,7 @@
       "initiative": 0,
       "intimidating": 0,
       "intuition": 0,
+      "investigation": 0,
       "fight": 0,
       "medicine": 0,
       "ocultism": 0,
@@ -54,8 +62,7 @@
       "surviving": 0,
       "tatics": 0,
       "technology": 0,
-      "force": 0,
-      "investigation": 0
+      "force": 0
     },
     "atained-objects": [],
     "money": [],
