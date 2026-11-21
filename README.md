@@ -2,18 +2,6 @@
 
 Interface do Arquivo de Campo, separada do backend `TheTowers`. Usa Next.js e React Router e mantém as telas de cadastro/login, central, agentes, campanhas, mesa, ameaças, homebrews e perfil.
 
-## Executar
-
-Use Node.js 24.x. Inicie o backend na porta 3000 e, neste repositório:
-
-```sh
-npm ci
-cp .env.example .env.local
-npm run dev
-```
-
-Abra http://localhost:3001. A interface pode abrir sem banco; autenticação e operações de jogo exigem o backend conectado ao MongoDB.
-
 ## Comunicação com a API
 
 Configure `BACKEND_URL` com a origem do backend, por exemplo `http://localhost:3000` ou `https://api.example.com`, sem `/api`. O padrão local é a porta 3000. O servidor Next.js encaminha `/api/:path*` para o backend antes da rota de telas. O cliente mantém URLs relativas e envia o token Bearer, sem precisar de CORS no navegador.
@@ -48,5 +36,3 @@ Agentes e ameaças exibem atributos, recursos, defesa e perícias em uma ficha r
 Os dados adicionais são salvos em `habilities.extras.dossier`, pela rota PUT já existente. Os valores de treino e outros bônus são somados em `habilities.lasts` para manter a mesa compatível. As oito habilidades do círculo vêm diretamente de `habilities.main` (cinco principais) e `habilities.naturals` (três naturais). Os recursos leem e salvam os máximos em `atributes.pv`, `dp`, `shield`, `defense`, `sanity` e `ammo`, e os atuais nas respectivas chaves `current-*`. Armadura (`shield`) e defesa (`defense`) são recursos distintos. Fichas antigas usam os máximos como atuais quando não há valor atual explícito; os valores de vida e determinação salvos pelo dossiê anterior são migrados no próximo salvamento quando não existem campos atuais no modelo. Os campos nativos têm prioridade, inclusive valores zero e negativos. A imagem do círculo fica em `public/images/character-circle.png`.
 
 Os testes do dossiê usam `1d20 + bônus`, como a mesa atual; o atributo da perícia é informativo. Ataques permitem bônus e expressões de dano, como `2d6+3`. Rolagens do dossiê são locais e não entram no histórico da campanha.
-
-Execute `npm test` para verificar compatibilidade de fichas, recursos e expressões de dados.
